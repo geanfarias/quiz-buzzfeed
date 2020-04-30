@@ -9,16 +9,21 @@
           />
         </figure>
         <div class="img-title">
-          <h3 class="title">{{item.question}}</h3>
+          <h3 class="title">{{ item.question }}</h3>
         </div>
       </div>
       <nav class="panel" :data-resposta="[dataResposta]" data-teste="pergunta">
         <label
+          @click="onClickOption(item)"
           class="panel-block"
           v-for="(option, indexAlternativa) in item.options"
           :key="indexAlternativa"
-          :class="{'has-background-primary' : indexAlternativa == item.correctAnswer}"
+          :class="{
+            'has-background-primary':
+              item.isFinishedQuestion && indexAlternativa == item.correctAnswer
+          }"
         >
+          {{ option.isFinishedQuestion }}
           <input
             data-teste="opcao"
             type="radio"
@@ -26,25 +31,31 @@
             :name="[index]"
             @click="verifyUserAnswer($event, indexAlternativa, index)"
           />
-          {{option}}
+          {{ option }}
         </label>
       </nav>
     </div>
     <div
       class="results"
       :data-resultado="[dataResultado]"
-      :class="{'active' : totalAnswered == questions.length}"
+      :class="{ active: totalAnswered == questions.length }"
     >
       <div>
         <span v-if="correctUserAnswers != 0">
-          Você acertou {{correctUserAnswers}} de {{questions.length}}
-          <span
-            v-if="correctUserAnswers == questions.length"
-          >Excelente!</span>
+          Você acertou {{ correctUserAnswers }} de {{ questions.length }}
+          <span v-if="correctUserAnswers == questions.length">Excelente!</span>
         </span>
-        <span v-if="correctUserAnswers === 0">Infelizmente você não acertou nada. Tente novamente.</span>
+        <span v-if="correctUserAnswers === 0"
+          >Infelizmente você não acertou nada. Tente novamente.</span
+        >
       </div>
-      <button class="button is-primary" @click="cleanForm()" data-test="refazer">Refazer</button>
+      <button
+        class="button is-primary"
+        @click="cleanForm()"
+        data-test="refazer"
+      >
+        Refazer
+      </button>
     </div>
   </div>
 </template>
@@ -58,35 +69,48 @@ export default {
       actual: "",
       questions: [
         {
+          id: 0,
           question: "Qual a capital do Brasil?",
           options: ["Salvador", "Manaus", "Brasília", "São Paulo"],
           correctAnswer: 2,
-          isUserCorrect: false
+          isUserCorrect: false,
+          isFinishedQuestion: false
         },
         {
+          id: 1,
           question: "Qual a capital do Amazonas?",
           options: ["Salvador", "Manaus", "Brasília", "São Paulo"],
           correctAnswer: 1,
-          isUserCorrect: false
+          isUserCorrect: false,
+          isFinishedQuestion: false
         },
         {
+          id: 2,
           question: "Qual a capital da Bahia?",
           options: ["Salvador", "Manaus", "Brasília", "São Paulo"],
           correctAnswer: 0,
-          isUserCorrect: false
+          isUserCorrect: false,
+          isFinishedQuestion: false
         },
         {
+          id: 3,
           question: "Qual a capital de São Paulo?",
           options: ["Salvador", "Manaus", "Brasília", "São Paulo"],
           correctAnswer: 3,
-          isUserCorrect: false
+          isUserCorrect: false,
+          isFinishedQuestion: false
         }
       ]
     };
   },
   methods: {
+    onClickOption(item) {
+      item.isFinishedQuestion = true;
+    },
     verifyUserAnswer: function(evento, userAnswer, questionNumber) {
-      let inputsAnswer = document.querySelectorAll(`input[name="${questionNumber}"]`);
+      let inputsAnswer = document.querySelectorAll(
+        `input[name="${questionNumber}"]`
+      );
       this.actual = this.questions[questionNumber];
       let correctQuestion = this.questions[questionNumber].correctAnswer;
       if (userAnswer === correctQuestion) {
@@ -113,7 +137,7 @@ export default {
         top: 0,
         left: 0,
         behavior: "smooth"
-      })
+      });
       this.correctUserAnswers = 0;
       this.totalAnswered = 0;
       let questions = document.querySelectorAll(`input`);
@@ -127,8 +151,8 @@ export default {
     dataResultado() {
       return this.correctUserAnswers;
     },
-    classAction(){
-      return ''
+    classAction() {
+      return "";
     }
   }
 };

@@ -14,14 +14,12 @@
       </div>
       <nav class="panel" :data-resposta="[dataResposta]" data-teste="pergunta">
         <label
-          @click="onClickOption(item)"
+          @click="onClickOption(item, indexAlternativa)"
           class="panel-block"
           v-for="(option, indexAlternativa) in item.options"
           :key="indexAlternativa"
-          :class="{
-            'has-background-primary':
-              item.isFinishedQuestion && indexAlternativa == item.correctAnswer
-          }"
+          :class="{'has-background-primary' : item.isFinishedQuestion && indexAlternativa == item.correctAnswer, 
+          'has-background-danger' : item.isFinishedQuestion && !item.isUserCorrect && indexAlternativa == item.userIndexAnswer}"
         >
           {{ option.isFinishedQuestion }}
           <input
@@ -43,19 +41,13 @@
       <div>
         <span v-if="correctUserAnswers != 0">
           Você acertou {{ correctUserAnswers }} de {{ questions.length }}
-          <span v-if="correctUserAnswers == questions.length">Excelente!</span>
+          <span
+            v-if="correctUserAnswers == questions.length"
+          >Excelente!</span>
         </span>
-        <span v-if="correctUserAnswers === 0"
-          >Infelizmente você não acertou nada. Tente novamente.</span
-        >
+        <span v-if="correctUserAnswers === 0">Infelizmente você não acertou nada. Tente novamente.</span>
       </div>
-      <button
-        class="button is-primary"
-        @click="cleanForm()"
-        data-test="refazer"
-      >
-        Refazer
-      </button>
+      <button class="button is-primary" @click="cleanForm()" data-test="refazer">Refazer</button>
     </div>
   </div>
 </template>
@@ -73,6 +65,7 @@ export default {
           question: "Qual a capital do Brasil?",
           options: ["Salvador", "Manaus", "Brasília", "São Paulo"],
           correctAnswer: 2,
+          userIndexAnswer: "",
           isUserCorrect: false,
           isFinishedQuestion: false
         },
@@ -81,6 +74,7 @@ export default {
           question: "Qual a capital do Amazonas?",
           options: ["Salvador", "Manaus", "Brasília", "São Paulo"],
           correctAnswer: 1,
+          userIndexAnswer: "",
           isUserCorrect: false,
           isFinishedQuestion: false
         },
@@ -89,6 +83,7 @@ export default {
           question: "Qual a capital da Bahia?",
           options: ["Salvador", "Manaus", "Brasília", "São Paulo"],
           correctAnswer: 0,
+          userIndexAnswer: "",
           isUserCorrect: false,
           isFinishedQuestion: false
         },
@@ -97,6 +92,7 @@ export default {
           question: "Qual a capital de São Paulo?",
           options: ["Salvador", "Manaus", "Brasília", "São Paulo"],
           correctAnswer: 3,
+          userIndexAnswer: "",
           isUserCorrect: false,
           isFinishedQuestion: false
         }
@@ -104,9 +100,6 @@ export default {
     };
   },
   methods: {
-    onClickOption(item) {
-      item.isFinishedQuestion = true;
-    },
     verifyUserAnswer: function(evento, userAnswer, questionNumber) {
       let inputsAnswer = document.querySelectorAll(
         `input[name="${questionNumber}"]`
@@ -132,6 +125,10 @@ export default {
         this.totalAnswered++;
       }
     },
+    onClickOption(item, userAnswer) {
+      item.isFinishedQuestion = true;
+      item.userIndexAnswer = userAnswer;
+    },
     cleanForm: function() {
       window.scroll({
         top: 0,
@@ -142,6 +139,12 @@ export default {
       this.totalAnswered = 0;
       let questions = document.querySelectorAll(`input`);
       questions.forEach(elemento => (elemento.disabled = false));
+      this.questions.forEach(
+        elemento => (
+          (elemento.isUserCorrect = false),
+          (elemento.isFinishedQuestion = false)
+        )
+      );
     }
   },
   computed: {
@@ -150,9 +153,6 @@ export default {
     },
     dataResultado() {
       return this.correctUserAnswers;
-    },
-    classAction() {
-      return "";
     }
   }
 };

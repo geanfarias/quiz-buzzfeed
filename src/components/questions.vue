@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="questionBlock" v-for="(item, index) in questions" :key="index">
+    <div class="questionBlock" v-for="(item, index) in questions" :key="index" :data-resposta="[dataResposta]" data-teste="pergunta">
       <div class="card-image">
         <figure class="image is-4by3">
           <img
@@ -12,7 +12,7 @@
           <h3 class="title">{{ item.question }}</h3>
         </div>
       </div>
-      <nav class="panel" :data-resposta="[dataResposta]" data-teste="pergunta">
+      <nav class="panel">
         <label
           @click="onClickOption(item, indexAlternativa)"
           class="panel-block"
@@ -111,16 +111,11 @@ export default {
         inputsAnswer.forEach(function(elemento) {
           elemento.disabled = true;
         });
-        // evento.target.parentElement.classList.add("has-background-primary");
         this.correctUserAnswers++;
         this.totalAnswered++;
       } else {
-        // evento.target.parentElement.classList.add("has-background-danger");
         inputsAnswer.forEach(function(elemento) {
           elemento.disabled = true;
-          if (elemento.value == correctQuestion) {
-            // elemento.parentElement.classList.add("has-background-primary");
-          }
         });
         this.totalAnswered++;
       }

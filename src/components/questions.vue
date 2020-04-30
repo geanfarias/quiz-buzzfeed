@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="questionBlock" v-for="(item, index) in valores" :key="index" data-teste="pergunta">
+    <div class="questionBlock" v-for="(item, index) in questions" :key="index">
       <div class="card-image">
         <figure class="image is-4by3">
           <img
@@ -12,22 +12,39 @@
           <h3 class="title">{{item.question}}</h3>
         </div>
       </div>
-      <nav class="panel">
-        <label class="panel-block" v-for="(option, index) in item.options" :key="index">
+      <nav class="panel" :data-resposta="[dataResposta]" data-teste="pergunta">
+        <label
+          class="panel-block"
+          v-for="(option, indexAlternativa) in item.options"
+          :key="indexAlternativa"
+          :class="{'has-background-primary' : indexAlternativa == item.correctAnswer}"
+        >
           <input
             data-teste="opcao"
             type="radio"
-            :value="[index]"
-            :name="[item.questionNumber]"
-            @click="verifyUserAnswer($event, index, item.questionNumber)"
+            :value="[indexAlternativa]"
+            :name="[index]"
+            @click="verifyUserAnswer($event, indexAlternativa, index)"
           />
           {{option}}
         </label>
       </nav>
     </div>
-    <div class="results">
-      <h4>{{AllResult}}</h4>
-      <button class="button is-primary" @click="cleanForm()">Refazer</button>
+    <div
+      class="results"
+      :data-resultado="[dataResultado]"
+      :class="{'active' : totalAnswered == questions.length}"
+    >
+      <div>
+        <span v-if="correctUserAnswers != 0">
+          Você acertou {{correctUserAnswers}} de {{questions.length}}
+          <span
+            v-if="correctUserAnswers == questions.length"
+          >Excelente!</span>
+        </span>
+        <span v-if="correctUserAnswers === 0">Infelizmente você não acertou nada. Tente novamente.</span>
+      </div>
+      <button class="button is-primary" @click="cleanForm()" data-test="refazer">Refazer</button>
     </div>
   </div>
 </template>
@@ -36,81 +53,82 @@
 export default {
   data() {
     return {
-      correctAnswers: 0,
-      optQuestion: 0,
-      valores: [
+      correctUserAnswers: 0,
+      totalAnswered: 0,
+      actual: "",
+      questions: [
         {
           question: "Qual a capital do Brasil?",
           options: ["Salvador", "Manaus", "Brasília", "São Paulo"],
-          correctIndex: 2,
-          questionNumber: 0
+          correctAnswer: 2,
+          isUserCorrect: false
         },
         {
           question: "Qual a capital do Amazonas?",
           options: ["Salvador", "Manaus", "Brasília", "São Paulo"],
-          correctIndex: 1,
-          questionNumber: 1
+          correctAnswer: 1,
+          isUserCorrect: false
         },
         {
           question: "Qual a capital da Bahia?",
           options: ["Salvador", "Manaus", "Brasília", "São Paulo"],
-          correctIndex: 0,
-          questionNumber: 2
+          correctAnswer: 0,
+          isUserCorrect: false
         },
         {
           question: "Qual a capital de São Paulo?",
           options: ["Salvador", "Manaus", "Brasília", "São Paulo"],
-          correctIndex: 3,
-          questionNumber: 3
+          correctAnswer: 3,
+          isUserCorrect: false
         }
       ]
     };
   },
   methods: {
-    verifyUserAnswer: function(evento, userAnswer, question) {
-      let inputsAnswer = document.querySelectorAll(`input[name="${question}"]`);
-      let correctQuestion = this.$data.valores[question].correctIndex;
+    verifyUserAnswer: function(evento, userAnswer, questionNumber) {
+      let inputsAnswer = document.querySelectorAll(`input[name="${questionNumber}"]`);
+      this.actual = this.questions[questionNumber];
+      let correctQuestion = this.questions[questionNumber].correctAnswer;
       if (userAnswer === correctQuestion) {
+        this.actual.isUserCorrect = true;
         inputsAnswer.forEach(function(elemento) {
           elemento.disabled = true;
         });
-        evento.target.parentElement.classList.add("has-background-primary");
-        this.$data.correctAnswers++;
-        this.$data.optQuestion++;
-        if(this.$data.optQuestion == this.$data.valores.length){
-          document.getElementsByClassName("results")[0].classList.add('active')
-        }
+        // evento.target.parentElement.classList.add("has-background-primary");
+        this.correctUserAnswers++;
+        this.totalAnswered++;
       } else {
-        evento.target.parentElement.classList.add("has-background-danger");
+        // evento.target.parentElement.classList.add("has-background-danger");
         inputsAnswer.forEach(function(elemento) {
           elemento.disabled = true;
           if (elemento.value == correctQuestion) {
-            elemento.parentElement.classList.add("has-background-primary");
-          };
+            // elemento.parentElement.classList.add("has-background-primary");
+          }
         });
-        this.$data.optQuestion++;
-        if(this.$data.optQuestion == this.$data.valores.length){
-          document.getElementsByClassName("results")[0].classList.add('active')
-        };
+        this.totalAnswered++;
       }
     },
-    cleanForm: function(){
+    cleanForm: function() {
+      window.scroll({
+        top: 0,
+        left: 0,
+        behavior: "smooth"
+      })
+      this.correctUserAnswers = 0;
+      this.totalAnswered = 0;
       let questions = document.querySelectorAll(`input`);
-      questions.forEach(function(elemento){
-        elemento.disabled = false;
-        elemento.parentElement.classList.remove("has-background-primary");
-        elemento.parentElement.classList.remove("has-background-danger");
-      });
+      questions.forEach(elemento => (elemento.disabled = false));
     }
   },
   computed: {
-    AllResult() {
-      if(this.$data.correctAnswers != 0){
-        return "Não foi dessa vez. Tente novamente."
-      }
-      else{
-        return `Você acertou ${this.$data.correctAnswers} de ${this.$data.valores.length}, Parabéns!`;
-      }
+    dataResposta() {
+      return this.actual.isUserCorrect ? "correta" : "errada";
+    },
+    dataResultado() {
+      return this.correctUserAnswers;
+    },
+    classAction(){
+      return ''
     }
   }
 };
@@ -145,6 +163,8 @@ input[type="radio"] {
 }
 .results {
   display: flex;
+  align-items: center;
+  justify-content: space-evenly;
   visibility: hidden;
   opacity: 0;
   transition: all 0.4s;
